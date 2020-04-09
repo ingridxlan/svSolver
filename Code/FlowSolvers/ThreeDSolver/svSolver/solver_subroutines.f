@@ -16756,17 +16756,46 @@ c
       allocate (ImpConvCoef(numTpoints+2,numISrfs))
 
 c..try easiest convolution Q and Z constant per time step
-      do j=3,numTpoints+1
-         ImpConvCoef(j,:) = ValueListImp(j-1,:)/numTpoints
+C       do j=3,numTpoints+1
+C          ImpConvCoef(j,:) = ValueListImp(j-1,:)/numTpoints
+C       enddo
+C       ImpConvCoef(1,:) =zero
+C       ImpConvCoef(2,:) =zero
+C       ImpConvCoef(numTpoints+2,:) = 
+C      &           ValueListImp(numTpoints+1,:)/numTpoints
+C c compensate for yalpha passed not y in Elmgmr()
+C       ImpConvCoef(numTpoints+1,:)= ImpConvCoef(numTpoints+1,:)
+C      &                  - ImpConvCoef(numTpoints+2,:)*(1.0-alfi)/alfi 
+C       ImpConvCoef(numTpoints+2,:)= ImpConvCoef(numTpoints+2,:)/alfi 
+
+
+c....=========================== ISL April 2019 ========================
+c....Compute beta coefficients using linear interpolation of flow within
+c....each time step and assuming constant impedance within each time step.
+c....This is implementation (a) in Irene's thesis pg. 157, but my own
+c....calculations yielded different beta coefficients.
+
+c....Note ValueListImp: Z(N), Z(N-1), Z(N-2), ..., Z(1), Z(0) 
+c....and is (numTpoints + 1) long
+
+      ImpConvCoef(1, :) = 0.5/numTpoints * (1.0 - alfi) * (1.0 - alfi) *
+     &                    ValueListImp(2, :)
+      
+      ImpConvCoef(2, :) = ImpConvCoef(1, :) + 
+     &                    0.5/numTpoints * ValueListImp(3, :)
+
+      do j=3, numTpoints
+        ImpConvCoef(j, :) = 0.5/numTpoints * 
+     &                   ( ValueListImp(j, :) + ValueListImp(j + 1, :) )
       enddo
-      ImpConvCoef(1,:) =zero
-      ImpConvCoef(2,:) =zero
-      ImpConvCoef(numTpoints+2,:) = 
-     &           ValueListImp(numTpoints+1,:)/numTpoints
-c compensate for yalpha passed not y in Elmgmr()
-      ImpConvCoef(numTpoints+1,:)= ImpConvCoef(numTpoints+1,:)
-     &                  - ImpConvCoef(numTpoints+2,:)*(1.0-alfi)/alfi 
-      ImpConvCoef(numTpoints+2,:)= ImpConvCoef(numTpoints+2,:)/alfi 
+
+      ImpConvCoef(numTpoints + 1, :) = 0.5/numTpoints * 
+     &                               (1.0 + 2.0 * alfi - alfi * alfi) * 
+     &                               ValueListImp(numTpoints + 1, :)
+
+      ImpConvCoef(numTpoints + 2, :) = 0.5/numTpoints * alfi * alfi *
+     &                               ValueListImp(numTpoints + 1, :)
+
       return
       end
 
