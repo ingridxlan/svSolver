@@ -229,7 +229,8 @@ c
       real*8, allocatable ::  ValueImpt(:,:,:)
       real*8, allocatable ::  ValueListImp(:,:)
       real*8, allocatable ::  ConvCoef(:,:)
-      real*8, allocatable ::  ImpConvCoef(:,:) 
+C       real*8, allocatable ::  ImpConvCoef(:,:)
+      real*8, allocatable ::  ImpConvCoef(:, :, :)     ! ISL April 2019
       real*8, allocatable ::  poldImp(:)
       integer ntimeptpT
       integer numDataImp

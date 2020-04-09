@@ -157,9 +157,11 @@ c
                           ! p is just the full Q for each surface
         do j = 1,numImpSrfs
             if(sign.lt.zero) then ! RHS so -1
-               p(j)= sign*(poldImp(j) + p(j)*ImpConvCoef(ntimeptpT+2,j))!pressure p=pold+ Qbeta
+               ! pressure p = pold + Qbeta
+               p(j) = sign * ( poldImp(j) + 
+     &                         p(j) * ImpConvCoef(ntimeptpT + 2, 1, j) )
             elseif(sign.gt.zero) then ! LHS so sign is positive
-               p(j)= sign*p(j)*ImpConvCoef(ntimeptpT+2,j)
+               p(j) = sign * p(j) * ImpConvCoef(ntimeptpT + 2, 1, j)
             endif
         enddo
              

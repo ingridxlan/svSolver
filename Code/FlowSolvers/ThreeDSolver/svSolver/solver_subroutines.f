@@ -16111,13 +16111,17 @@ C
 C
       integer  nTimePoint,nSrfs
       real*8   pressHist(0:MAXSURF)
-      real*8   QHist(nTimePoint+1,nSrfs),betas(nTimePoint+2,nSrfs)
+      real*8   QHist(nTimePoint+1,nSrfs),betas(nTimePoint+2, 2, nSrfs)
       !don't need here betas(ntimePoint+2)
       !but pb of array passing if cut at nTimePoint+1
       pressHist=zero
       do k=1,nSrfs
         do j=1,nTimePoint+1
-            pressHist(k) = pressHist(k) + QHist(j,k)*betas(j,k)
+C            pressHist(k) = pressHist(k) + QHist(j,k) * betas(j,k)
+
+c.....======================== ISL April 2019 ==========================
+           pressHist(k) = pressHist(k) + 
+     &                    QHist(j, k) * ( betas(j,1,k) + betas(j,2,k) )
         enddo
       enddo
       return
@@ -16753,7 +16757,7 @@ C
 c
 c...calculate the coefficients for the impedance convolution
 c 
-      allocate (ImpConvCoef(numTpoints+2,numISrfs))
+C       allocate (ImpConvCoef(numTpoints+2,numISrfs))
 
 c..try easiest convolution Q and Z constant per time step
 C       do j=3,numTpoints+1
@@ -16778,23 +16782,31 @@ c....calculations yielded different beta coefficients.
 c....Note ValueListImp: Z(N), Z(N-1), Z(N-2), ..., Z(1), Z(0) 
 c....and is (numTpoints + 1) long
 
-      ImpConvCoef(1, :) = 0.5/numTpoints * (1.0 - alfi) * (1.0 - alfi) *
-     &                    ValueListImp(2, :)
-      
-      ImpConvCoef(2, :) = ImpConvCoef(1, :) + 
-     &                    0.5/numTpoints * ValueListImp(3, :)
+c.....Split up the integrals to the left & right of each time step
+      allocate (ImpConvCoef(numTpoints + 2, 2, numISrfs))
 
-      do j=3, numTpoints
-        ImpConvCoef(j, :) = 0.5/numTpoints * 
-     &                   ( ValueListImp(j, :) + ValueListImp(j + 1, :) )
+      ImpConvCoef = zero
+
+      ImpConvCoef(1, 2, :) = 0.5 / numTpoints * (1.0 - alfi) * 
+     &                       (1.0 - alfi) * ValueListImp(2, :)
+      
+      ImpConvCoef(2, 1, :) = ImpConvCoef(1, 2, :)
+      ImpConvCoef(2, 2, :) = 0.5 / numTpoints * ValueListImp(3, :)
+
+      do j = 3, numTpoints
+        ImpConvCoef(j, 1, :) = 0.5 / numTpoints * ValueListImp(j, :)
+        ImpConvCoef(j, 2, :) = 0.5 / numTpoints * ValueListImp(j + 1, :)
       enddo
 
-      ImpConvCoef(numTpoints + 1, :) = 0.5/numTpoints * 
-     &                               (1.0 + 2.0 * alfi - alfi * alfi) * 
-     &                               ValueListImp(numTpoints + 1, :)
+      ImpConvCoef(numTpoints+1, 1, :) = 0.5 / numTpoints * 
+     &                                  ValueListImp(numTpoints + 1, :)
 
-      ImpConvCoef(numTpoints + 2, :) = 0.5/numTpoints * alfi * alfi *
-     &                               ValueListImp(numTpoints + 1, :)
+      ImpConvCoef(numTpoints+1, 2, :) = 0.5 / numTpoints *
+     &                                  (2.0 * alfi - alfi * alfi) * 
+     &                                  ValueListImp(numTpoints + 1, :)
+
+      ImpConvCoef(numTpoints+2, 1, :) = 0.5 / numTpoints * alfi * alfi *
+     &                                  ValueListImp(numTpoints + 1, :)
 
       return
       end

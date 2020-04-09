@@ -126,7 +126,10 @@ c     INTENT WAS ADDED IN MAHDI VERSION - DES
 #endif
          DO k = 1, numImpSrfs
             faIn = faIn + 1
-            faceRes(faIn) = ImpConvCoef(ntimeptpT+2,k)
+
+c............ ISL April 2019
+            faceRes(faIn) = ImpConvCoef(ntimeptpT+2, 1, k)
+            
          END DO
          DO k = 1, numRCRSrfs
             faIn = faIn + 1
