@@ -16099,12 +16099,42 @@ c     CHECK IF THE LAGRANGE MULTIPLIER FILE EXISTS - DES
       return
       end         
 
-!> Returns in pold the history dependent part of the pressure in the
-!! impedance/flow rate convolution for the impedance, RCR, COR
+!> Returns in pressHist the history dependent part of the pressure in the
+!! impedance/flow rate convolution for RCR, COR BCs
 
       subroutine pHist(pressHist,QHist,betas,nTimePoint,nSrfs)
 
       include "global.h"
+
+C     Local variables
+C
+      INTEGER             j,           k
+C
+      integer  nTimePoint,nSrfs
+      real*8   pressHist(0:MAXSURF)
+      real*8   QHist(nTimePoint+1,nSrfs),betas(nTimePoint+2, nSrfs)
+      !don't need here betas(ntimePoint+2)
+      !but pb of array passing if cut at nTimePoint+1
+
+      pressHist=zero
+      do k=1,nSrfs
+        do j=1,nTimePoint+1
+           pressHist(k) = pressHist(k) + QHist(j,k) * betas(j,k)
+        enddo
+      enddo
+      return
+      end
+
+!============================= ISL April 2020 ==========================
+!> Returns in pressHist the history dependent part of the pressure in the
+!! impedance/flow rate convolution for impedance BCs
+
+      subroutine pHistImp(pressHist,QHist,betas,nTimePoint,nSrfs)
+
+      include "global.h"
+      include "common_blocks/timdat.h"  ! bring in istep
+
+
 C     Local variables
 C
       INTEGER             j,           k
@@ -16114,18 +16144,37 @@ C
       real*8   QHist(nTimePoint+1,nSrfs),betas(nTimePoint+2, 2, nSrfs)
       !don't need here betas(ntimePoint+2)
       !but pb of array passing if cut at nTimePoint+1
-      pressHist=zero
-      do k=1,nSrfs
-        do j=1,nTimePoint+1
-C            pressHist(k) = pressHist(k) + QHist(j,k) * betas(j,k)
 
-c.....======================== ISL April 2019 ==========================
-           pressHist(k) = pressHist(k) + 
-     &                    QHist(j, k) * ( betas(j,1,k) + betas(j,2,k) )
+      pressHist = zero
+
+      if (istep .lt. nTimePoint) then     ! if not a complete period yet
+        
+        do k = 1, nSrfs
+
+          ! integral to the right of (t_n - istep)
+          pressHist(k) = QHist(nTimePoint + 1 - istep, k) *
+     &                   betas(nTimePoint + 1 - istep, 2, k)
+
+          ! integrals on both sides of all subsequent time steps
+          do j = (nTimePoint + 2 - istep), (nTimePoint + 1)
+            pressHist(k) = pressHist(k) + Qhist(j, k) * 
+     &                     ( betas(j, 1, k) + betas(j, 2, k) )
+          enddo
         enddo
-      enddo
+
+      else                             ! at least a full period complete
+        do k = 1, nSrfs
+          do j = 1, nTimePoint + 1
+            pressHist(k) = pressHist(k) + QHist(j, k) * 
+     &                     ( betas(j, 1, k) + betas(j, 2, k) )
+          enddo
+        enddo
+
+      endif     
+      
       return
       end
+! ======================================================================
 
 !> This subroutine reads a data file and copies to a data array
 
@@ -16773,7 +16822,7 @@ C      &                  - ImpConvCoef(numTpoints+2,:)*(1.0-alfi)/alfi
 C       ImpConvCoef(numTpoints+2,:)= ImpConvCoef(numTpoints+2,:)/alfi 
 
 
-c....=========================== ISL April 2019 ========================
+c....=========================== ISL April 2020 ========================
 c....Compute beta coefficients using linear interpolation of flow within
 c....each time step and assuming constant impedance within each time step.
 c....This is implementation (a) in Irene's thesis pg. 157, but my own

@@ -637,8 +637,8 @@ c
 c
 c ... calc the pressure contribution that depends on the history for the imp BC
 c     
-            if(numImpSrfs.gt.0) call pHist(poldImp,QHistImp,ImpConvCoef,
-     &                                          ntimeptpT,numImpSrfs)
+            if(numImpSrfs.gt.0) call pHistImp(poldImp, QHistImp,
+     &                               ImpConvCoef, ntimeptpT, numImpSrfs)
 c
 c ... calc the pressure contribution that depends on the history for the RCR BC
 c     

@@ -108,7 +108,7 @@ c     INTENT WAS ADDED IN MAHDI VERSION - DES
       INTEGER svLS_nFaces
       REAL*8  faceRes(svLS_nFaces)
 
-      INTEGER faIn, k
+      INTEGER faIn, k, T, normT
 
       faIn = 1 ! First element is reserved for Dirichlet BC
       faceRes = zero
@@ -124,13 +124,22 @@ c     INTENT WAS ADDED IN MAHDI VERSION - DES
             faceRes(faIn) = PGenDer(k)
          END DO
 #endif
+
+c....========================= ISL April 2020 ==========================
+         T = ntimeptpT * Delt(1)               ! period
+         normT = (istep + alfi) * Delt(1)      ! time thus far
+
          DO k = 1, numImpSrfs
             faIn = faIn + 1
-
-c............ ISL April 2019
             faceRes(faIn) = ImpConvCoef(ntimeptpT+2, 1, k)
-            
+
+            If (istep < ntimeptpT) THEN
+               faceRes(faIn) = faceRes(faIn) * T / normT
+            ENDIF
+
          END DO
+c....===================================================================
+
          DO k = 1, numRCRSrfs
             faIn = faIn + 1
             faceRes(faIn) = RCRConvCoef(lstep+2,k)

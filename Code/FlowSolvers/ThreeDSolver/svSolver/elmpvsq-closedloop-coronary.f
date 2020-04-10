@@ -101,17 +101,18 @@ c
       include "common_blocks/conpar.h"
       include "common_blocks/nomodule.h"
       include "common_blocks/timdat.h"
+      include "common_blocks/inpdat.h"  ! ISL April 2020 bring in Delt
 C
 C
       REAL*8  sign
       real*8  res(nshg,ndof), y(nshg,3)
       real*8  p(0:MAXSURF),   q(0:MAXSURF,3)
-      integer irankCoupled, i, j, k
+      integer irankCoupled, i, j, k, T, normT
 c
 c... get p for the resistance BC
 c           
       if(numResistSrfs.gt.zero) then
-        call GetFlowQ(p,y,nsrflistResist,numResistSrfs)  !Q pushed into p but at this point 
+        call GetFlowQ(p,y,nsrflistResist,numResistSrfs)  !Q pushed into p but at this point
                           ! p is just the full Q for each surface
         
         p=sign*p*ValueListResist ! p=QR  now we have the true pressure on each
@@ -162,6 +163,12 @@ c
      &                         p(j) * ImpConvCoef(ntimeptpT + 2, 1, j) )
             elseif(sign.gt.zero) then ! LHS so sign is positive
                p(j) = sign * p(j) * ImpConvCoef(ntimeptpT + 2, 1, j)
+            endif
+
+            if (istep .lt. ntimeptpT) then
+              T = ntimeptpT * Delt(1)               ! period
+              normT = (istep + alfi) * Delt(1)      ! time thus far
+              p(j) = p(j) * T / normT
             endif
         enddo
              
