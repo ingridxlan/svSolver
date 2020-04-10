@@ -104,10 +104,10 @@ c
       include "common_blocks/inpdat.h"  ! ISL April 2020 bring in Delt
 C
 C
-      REAL*8  sign
+      REAL*8  sign, T, normT
       real*8  res(nshg,ndof), y(nshg,3)
       real*8  p(0:MAXSURF),   q(0:MAXSURF,3)
-      integer irankCoupled, i, j, k, T, normT
+      integer irankCoupled, i, j, k
 c
 c... get p for the resistance BC
 c           
@@ -168,6 +168,10 @@ c
             if (istep .lt. ntimeptpT) then
               T = ntimeptpT * Delt(1)               ! period
               normT = (istep + alfi) * Delt(1)      ! time thus far
+
+              print *, '*************** T = ', T,        ' ************'
+              print *, '*********** normT = ', normT,    ' ************'
+
               p(j) = p(j) * T / normT
             endif
         enddo

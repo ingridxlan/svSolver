@@ -106,9 +106,9 @@ c
 C
 c     INTENT WAS ADDED IN MAHDI VERSION - DES
       INTEGER svLS_nFaces
-      REAL*8  faceRes(svLS_nFaces)
+      REAL*8  faceRes(svLS_nFaces), T, normT
 
-      INTEGER faIn, k, T, normT
+      INTEGER faIn, k
 
       faIn = 1 ! First element is reserved for Dirichlet BC
       faceRes = zero
