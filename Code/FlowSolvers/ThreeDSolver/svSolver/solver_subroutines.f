@@ -16914,9 +16914,11 @@ C
       endif
       if (stepn .ge. 2) then
         do j=2,stepn
+c.....========== ISL April 2020: added missing 2 terms at the end ======
          RCRConvCoef(j,:) = ValueListRCR(3,:)/dtRCR(:)*
      &        exp(-dtRCR(:)*(stepn + alfi + 2 - j))*
-     &        (1 - exp(dtRCR(:)))**2
+     &        ( (1 - exp(dtRCR(:))) ** 2 - dtRCR(:) * exp(dtRCR(:)) + 
+     &          dtRCR(:) )
         enddo
       endif
 
