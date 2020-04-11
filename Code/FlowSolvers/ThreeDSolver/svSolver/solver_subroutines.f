@@ -16152,11 +16152,23 @@ C
         do k = 1, nSrfs
 
           ! integral to the right of (t_n - istep)
+          if (k .EQ. 1) then
+            print *, '************ integral to the right **********'
+            print *, QHist(nTimePoint + 1 - istep, k)
+          endif
+
           pressHist(k) = QHist(nTimePoint + 1 - istep, k) *
      &                   betas(nTimePoint + 1 - istep, 2, k)
 
           ! integrals on both sides of all subsequent time steps
+          if (k .EQ. 1) then
+            print *, '************ integrals on both sides **********'
+          endif
+          
           do j = (nTimePoint + 2 - istep), (nTimePoint + 1)
+            if (k .EQ. 1) then
+              print *, Qhist(j, k)
+            endif
             pressHist(k) = pressHist(k) + Qhist(j, k) * 
      &                     ( betas(j, 1, k) + betas(j, 2, k) )
           enddo
@@ -16856,6 +16868,11 @@ c.....Split up the integrals to the left & right of each time step
 
       ImpConvCoef(numTpoints+2, 1, :) = 0.5 / numTpoints * alfi * alfi *
      &                                  ValueListImp(numTpoints + 1, :)
+
+c compensate for yalpha passed not y in Elmgmr()
+      ImpConvCoef(numTpoints+1,:) = ImpConvCoef(numTpoints+1,:)
+     &                  - ImpConvCoef(numTpoints+2,:)*(1.0-alfi) / alfi 
+      ImpConvCoef(numTpoints+2,:) = ImpConvCoef(numTpoints+2,:) / alfi 
 
       return
       end

@@ -168,10 +168,6 @@ c
             if (istep .lt. ntimeptpT) then
               T = ntimeptpT * Delt(1)               ! period
               normT = (istep + alfi) * Delt(1)      ! time thus far
-
-              print *, '*************** T = ', T,        ' ************'
-              print *, '*********** normT = ', normT,    ' ************'
-
               p(j) = p(j) * T / normT
             endif
         enddo
