@@ -16870,9 +16870,9 @@ c.....Split up the integrals to the left & right of each time step
      &                                  ValueListImp(numTpoints + 1, :)
 
 c compensate for yalpha passed not y in Elmgmr()
-      ImpConvCoef(numTpoints+1,:) = ImpConvCoef(numTpoints+1,:)
-     &                  - ImpConvCoef(numTpoints+2,:)*(1.0-alfi) / alfi 
-      ImpConvCoef(numTpoints+2,:) = ImpConvCoef(numTpoints+2,:) / alfi 
+      ImpConvCoef(numTpoints+1,2,:) = ImpConvCoef(numTpoints+1,2,:)
+     &                   - ImpConvCoef(numTpoints+2,1,:)*(1.0-alfi)/alfi 
+      ImpConvCoef(numTpoints+2,1,:) = ImpConvCoef(numTpoints+2,1,:)/alfi 
 
       return
       end
