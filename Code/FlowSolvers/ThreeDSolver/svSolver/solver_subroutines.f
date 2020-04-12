@@ -16851,7 +16851,8 @@ c.....Split up the integrals to the left & right of each time step
       ImpConvCoef(1, 2, :) = 0.5 / numTpoints * (1.0 - alfi) * 
      &                       (1.0 - alfi) * ValueListImp(2, :)
       
-      ImpConvCoef(2, 1, :) = ImpConvCoef(1, 2, :)
+      ImpConvCoef(2, 1, :) = 0.5 / numTpoints * (1.0 - alfi * alfi) *
+     &                       ValueListImp(2, :)
       ImpConvCoef(2, 2, :) = 0.5 / numTpoints * ValueListImp(3, :)
 
       do j = 3, numTpoints
