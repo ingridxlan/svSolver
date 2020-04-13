@@ -167,9 +167,9 @@ C         print *, '************ Adding beta * Q_n+1 *************'
                p(j) = sign * p(j) * ImpConvCoef(ntimeptpT + 2, 1, j)
             endif
 
-            if (istep .lt. ntimeptpT) then
+            if (lstep .lt. ntimeptpT) then
               T = ntimeptpT * Delt(1)               ! period
-              normT = (istep + alfi) * Delt(1)      ! time thus far
+              normT = (lstep + alfi) * Delt(1)      ! time thus far
               p(j) = p(j) * T / normT
             endif
         enddo

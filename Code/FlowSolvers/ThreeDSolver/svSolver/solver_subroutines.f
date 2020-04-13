@@ -16898,11 +16898,11 @@ c compensate for yalpha passed not y in Elmgmr()
      &                   - ImpConvCoef(numTpoints+2,1,:)*(1.0-alfi)/alfi 
       ImpConvCoef(numTpoints+2,1,:) = ImpConvCoef(numTpoints+2,1,:)/alfi 
 
-      print *, '************* ImpConvCoef Srf 1 Col 1 ***********'
-      print *, ImpConvCoef(:, 1, 1)
+C       print *, '************* ImpConvCoef Srf 1 Col 1 ***********'
+C       print *, ImpConvCoef(:, 1, 1)
 
-      print *, '************* ImpConvCoef Srf 1 Col 2 ***********'
-      print *, ImpConvCoef(:, 2, 1)
+C       print *, '************* ImpConvCoef Srf 1 Col 2 ***********'
+C       print *, ImpConvCoef(:, 2, 1)
 
       return
       end

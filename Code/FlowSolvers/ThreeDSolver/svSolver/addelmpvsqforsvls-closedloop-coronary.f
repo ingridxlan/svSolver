@@ -127,13 +127,13 @@ c     INTENT WAS ADDED IN MAHDI VERSION - DES
 
 c....========================= ISL April 2020 ==========================
          T = ntimeptpT * Delt(1)               ! period
-         normT = (istep + alfi) * Delt(1)      ! time thus far
+         normT = (lstep + alfi) * Delt(1)      ! time thus far
 
          DO k = 1, numImpSrfs
             faIn = faIn + 1
             faceRes(faIn) = ImpConvCoef(ntimeptpT+2, 1, k)
 
-            If (istep < ntimeptpT) THEN
+            If (lstep < ntimeptpT) THEN
                faceRes(faIn) = faceRes(faIn) * T / normT
             ENDIF
 
