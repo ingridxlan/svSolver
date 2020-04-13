@@ -15850,6 +15850,7 @@ C
       use convolImpFlow
       include "global.h"
       include "common_blocks/nomodule.h"
+      include "common_blocks/timdat.h"  ! ISL April 2020, bring in lstep
 
 C     Local variables
 C
@@ -15869,9 +15870,23 @@ C
          enddo
       close(817)
       
+      ntimeptpT = nptsImpmax - 1      ! num time steps per cardiac cycle
       allocate (ValueListImp(ntimeptpT+1,numImpSrfs))
       ValueListImp(ntimeptpT+1,:) = ValueImpt(1,2,:) !Z(time=0), last entry
       ValueListImp(1,:) = ValueImpt(1,2,:) !Z(time=0)=Z(time=T)
+
+c....=========================== ISL April 2020 ========================
+C       ntimeptpT = nptsImpmax - 1      ! num time steps per cardiac cycle
+
+      allocate (QHistImp(ntimeptpT+1,numImpSrfs))     ! for flow history
+
+      QHistImp = zero
+
+      if (lstep .gt. 0) then
+         call ReadDataFile(QHistImp(1:lstep+1,:),lstep+1,numImpSrfs,
+     &      'QHistImp.dat',816)
+      endif
+
       return
       end
       
@@ -15883,7 +15898,7 @@ C
 
         include "global.h"
         include "common_blocks/nomodule.h"
-
+        
 C     Local variables
 C
       REAL*8          wr
@@ -15909,6 +15924,7 @@ C
 
          enddo
       enddo
+
       return
       end
 
@@ -16105,6 +16121,7 @@ c     CHECK IF THE LAGRANGE MULTIPLIER FILE EXISTS - DES
       subroutine pHist(pressHist,QHist,betas,nTimePoint,nSrfs)
 
       include "global.h"
+      include "common_blocks/timdat.h"  ! bring in lstep
 
 C     Local variables
 C
@@ -16119,7 +16136,10 @@ C
       pressHist=zero
       do k=1,nSrfs
         do j=1,nTimePoint+1
-           pressHist(k) = pressHist(k) + QHist(j,k) * betas(j,k)
+          if (k .eq. 1 .AND. j .le. lstep + 1) then
+            print *, '******** ', QHist(j,k), ' ********'
+          endif
+          pressHist(k) = pressHist(k) + QHist(j,k) * betas(j,k)
         enddo
       enddo
       return
@@ -16132,7 +16152,7 @@ C
       subroutine pHistImp(pressHist,QHist,betas,nTimePoint,nSrfs)
 
       include "global.h"
-      include "common_blocks/timdat.h"  ! bring in istep
+      include "common_blocks/timdat.h"  ! bring in lstep
 
 
 C     Local variables
@@ -16147,30 +16167,32 @@ C
 
       pressHist = zero
 
-      if (istep .lt. nTimePoint) then     ! if not a complete period yet
+      if (lstep .lt. nTimePoint) then     ! if not a complete period yet
         
         do k = 1, nSrfs
 
-          ! integral to the right of (t_n - istep)
-          if (k .EQ. 1) then
-            print *, '************ integral to the right **********'
-            print *, QHist(nTimePoint + 1 - istep, k)
-          endif
+          ! integral to the right of (t_n - lstep)
+C           if (k .EQ. 1) then
+C             print *, '************ integral to the right **********'
+C             print *, QHist(lstep + 1, k), ' ', betas(nTimePoint+1, 2, k)
+C           endif
 
-          pressHist(k) = QHist(nTimePoint + 1 - istep, k) *
-     &                   betas(nTimePoint + 1 - istep, 2, k)
+          pressHist(k) = QHist(lstep + 1, k) *
+     &                   betas(nTimePoint + 1, 2, k)
 
-          ! integrals on both sides of all subsequent time steps
-          if (k .EQ. 1) then
-            print *, '************ integrals on both sides **********'
-          endif
+          ! integrals on both sides of all prior time steps
+C           if (k .EQ. 1) then
+C             print *, '************ integrals on both sides **********'
+C           endif
           
-          do j = (nTimePoint + 2 - istep), (nTimePoint + 1)
-            if (k .EQ. 1) then
-              print *, Qhist(j, k)
-            endif
+          do j = 1, lstep
+C             if (k .EQ. 1) then
+C               print *, Qhist(j, k), ' ', betas(nTimePoint-lstep + j,1,k)
+C             endif
+
             pressHist(k) = pressHist(k) + Qhist(j, k) * 
-     &                     ( betas(j, 1, k) + betas(j, 2, k) )
+     &                     ( betas(nTimePoint - lstep + j, 1, k) + 
+     &                       betas(nTimePoint - lstep + j, 2, k) )
           enddo
         enddo
 
@@ -16814,7 +16836,8 @@ C
       ConvCoef(2,3)=zero
       ConvCoef(numTpoints+1,1)=zero
       ConvCoef(numTpoints+2,2)=zero
-      ConvCoef(numTpoints+2,1)=zero  
+      ConvCoef(numTpoints+2,1)=zero
+
 c
 c...calculate the coefficients for the impedance convolution
 c 
@@ -16874,6 +16897,12 @@ c compensate for yalpha passed not y in Elmgmr()
       ImpConvCoef(numTpoints+1,2,:) = ImpConvCoef(numTpoints+1,2,:)
      &                   - ImpConvCoef(numTpoints+2,1,:)*(1.0-alfi)/alfi 
       ImpConvCoef(numTpoints+2,1,:) = ImpConvCoef(numTpoints+2,1,:)/alfi 
+
+      print *, '************* ImpConvCoef Srf 1 Col 1 ***********'
+      print *, ImpConvCoef(:, 1, 1)
+
+      print *, '************* ImpConvCoef Srf 1 Col 2 ***********'
+      print *, ImpConvCoef(:, 2, 1)
 
       return
       end

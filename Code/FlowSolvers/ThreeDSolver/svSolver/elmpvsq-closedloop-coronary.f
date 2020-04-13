@@ -156,6 +156,8 @@ c
       if(numImpSrfs.gt.zero) then
         call GetFlowQ(p,y,nsrflistImp,numImpSrfs)  !Q pushed into p but at this point 
                           ! p is just the full Q for each surface
+
+C         print *, '************ Adding beta * Q_n+1 *************'
         do j = 1,numImpSrfs
             if(sign.lt.zero) then ! RHS so -1
                ! pressure p = pold + Qbeta

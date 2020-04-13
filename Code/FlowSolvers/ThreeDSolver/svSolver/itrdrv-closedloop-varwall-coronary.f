@@ -228,6 +228,7 @@ c
       TYPE(svLS_lsType) svLS_ls
 
 !--------------------------------------------------------
+
 !     Get flag for deformable nodes
       deformflag=0
       if(ideformwall.eq.1) then
@@ -388,6 +389,7 @@ c
          allocate (lhsP(4,nnz_tot))
          allocate (lhsK(9,nnz_tot))
 
+
          IF (svLSFlag .EQ. 1) THEN
             IF  (ipvsq .GE. 2) THEN
 
@@ -411,7 +413,7 @@ c
 
             CALL svLS_LHS_CREATE(svLS_lhs, communicator, gnNo, nNo, 
      2         nnz_tot, ltg, colm, rowp, svLS_nFaces)
-            
+
             faIn = 1
             facenNo = 0
             DO i=1, nshg
@@ -432,6 +434,7 @@ c
             CALL svLS_BC_CREATE(svLS_lhs, faIn, facenNo, 
      2         nsd, BC_TYPE_Dir, gNodes, sV)
 
+            
             IF  (ipvsq .GE. 2) THEN
                DO k = 1, numResistSrfs
                   faIn = faIn + 1
@@ -480,6 +483,7 @@ c
 
 
       ENDIF
+
 
       if(nsclrsol.gt.0) then
        do isolsc=1,nsclrsol
@@ -552,10 +556,12 @@ c
          LCtime = loctim(itseq)
          dtol(:)= deltol(itseq,:)
 
+
          call itrSetup ( y, acold )
 c
 c...initialize the coefficients for the impedance convolution,
 c   which are functions of alphaf so need to do it after itrSetup
+
 
          if(numImpSrfs.gt.zero) then
             call calcImpConvCoef (numImpSrfs, ntimeptpT)

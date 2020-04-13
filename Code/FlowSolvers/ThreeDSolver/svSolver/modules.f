@@ -224,22 +224,18 @@ c
 !! current time level. 
 
       module convolImpFlow
-
-      real*8, allocatable ::  QHistImp(:,:)
+      real*8, allocatable ::  QHistImp(:,:) ! Q over most recent cycle
       real*8, allocatable ::  ValueImpt(:,:,:)
       real*8, allocatable ::  ValueListImp(:,:)
       real*8, allocatable ::  ConvCoef(:,:)
 C       real*8, allocatable ::  ImpConvCoef(:,:)
-      real*8, allocatable ::  ImpConvCoef(:, :, :)     ! ISL April 2019
+      real*8, allocatable ::  ImpConvCoef(:, :, :)     ! ISL April 2020
       real*8, allocatable ::  poldImp(:)
       integer ntimeptpT
       integer numDataImp
       integer, allocatable :: nImpt(:)
       integer, allocatable :: numImpt(:)
       integer nptsImpmax
-      real*8, allocatable ::  QHistTry(:,:)
-      real*8, allocatable ::  QHistTryF(:,:) !filter
-      integer cutfreq !filter
       end module
 
 !> This module conveys the parameters for the different RCR outlets.

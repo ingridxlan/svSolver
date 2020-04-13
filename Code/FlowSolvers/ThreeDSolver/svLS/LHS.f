@@ -56,6 +56,7 @@
       INTEGER, ALLOCATABLE :: aNodes(:,:), gtlPtr(:), ltg(:), 
      2   part(:), sCount(:), disp(:)
 
+
       IF (lhs%foC) THEN
          PRINT *, "LHS is not free"
          PRINT *, "You may use svLS_LHS_FREE to free this structure"
@@ -74,6 +75,7 @@
 
       ALLOCATE (lhs%colPtr(nnz), lhs%rowPtr(2,nNo), lhs%diagPtr(nNo),
      2   lhs%map(nNo), lhs%cS(nTasks), lhs%face(nFaces))
+    
       
       IF (nTasks .EQ. 1) THEN
          DO i=1, nnz

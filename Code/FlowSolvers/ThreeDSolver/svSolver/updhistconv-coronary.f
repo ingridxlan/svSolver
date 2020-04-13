@@ -86,7 +86,7 @@ c ... update the flow rate history for the impedance convolution, filter it and 
 c    
       subroutine UpdHistConv(y,nsrfIdList,numSrfs)
       
-      use convolImpFlow !brings ntimeptpT, QHistImp, QHistTry, QHistTryF, numImpSrfs
+      use convolImpFlow !brings ntimeptpT, QHistImp, QHistIMP, numImpSrfs
       use convolRCRFlow !brings QHistRCR, numRCRSrfs
 #if(VER_CORONARY == 1)
       use convolCORFlow
@@ -110,26 +110,27 @@ C
 
       call GetFlowQ(NewQ,y,nsrfIdList,numSrfs) !new flow at time n+1
 c
-c... for imp BC: shift QHist, add new constribution, filter and write out
-c      
-      if(numImpSrfs.gt.zero .and. nsrfIdList(1).eq.nsrflistImp(1)) then
-         do j=1, ntimeptpT
-            QHistImp(j,1:numSrfs)=QHistImp(j+1,1:numSrfs)
-         enddo
-         QHistImp(ntimeptpT+1,1:numSrfs) = NewQ(1:numSrfs)
-         QHistImp(1,:)=zero
-c
-c.... write out the new history of flow rates to Qhistor.dat
-c      
-         if ((mod(lstep, ntout) .eq. 0) .and.
-     &               (myrank .eq. zero)) then
-            open(unit=816, file='Qhistor.dat',status='replace')
-            write(816,*) ntimeptpT
-            do j=1,ntimeptpT+1
-               write(816,*) (QHistImp(j,n),n=1, numSrfs)
-            enddo
-            close(816)
-         endif
+c....========================== ISL April 2020 =========================      
+      if (numImpSrfs.gt.zero .and. nsrfIdList(1).eq.nsrflistImp(1)) then
+
+        if (lstep .lt. ntimeptpT) then       ! not a complete period yet
+          QHistImp(lstep + 1, 1 : numSrfs) = NewQ(1 : numSrfs)
+        else                                 ! at least a full period
+          do j = 1, ntimeptpT
+            QHistImp(j, 1 : numSrfs) = QHistImp(j + 1, 1 : numSrfs)
+          enddo
+          QHistImp(ntimeptpT + 1, 1 : numSrfs) = NewQ(1 : numSrfs)
+        endif
+
+c.... write out the new history of flow rates at restart times
+        if ((mod(lstep, ntout) .eq. 0) .and. (myrank .eq. zero)) then
+          open(unit = 816, file ='QHistImp.dat',status = 'replace')
+          write(816,*) ntimeptpT
+          do j = 1, ntimeptpT+1
+            write(816, *) (QHistImp(j, n), n = 1, numSrfs)
+          enddo
+          close(816)
+        endif
       endif 
 
 c

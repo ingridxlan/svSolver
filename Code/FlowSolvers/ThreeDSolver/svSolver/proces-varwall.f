@@ -125,6 +125,7 @@ c
      &               point2iper,     point2ilwork,   shp,
      &               shgl,           shpb,           shglb
      &               )
+        
         call setper(nshg)
         call perprep(iBC,point2iper,nshg)
 
@@ -176,6 +177,7 @@ c.... ------------------------------------------------------------------
         endif
 
 #if(VER_VARWALL == 1)
+      
 
 c....   variable thicknessvw, evw, ksvw, csvw, p0vw
         if (itissuesuppt.eq.1) then    
@@ -223,7 +225,6 @@ c
 c
 c.... call the semi-discrete predictor multi-corrector iterative driver
 c
-
         call itrdrv (y,              ac,
      &               uold,           point2x,
      &               iBC,            BC,

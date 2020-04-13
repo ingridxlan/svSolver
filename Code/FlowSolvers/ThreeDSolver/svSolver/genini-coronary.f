@@ -161,31 +161,40 @@ c
            call initBCt( x,lgmapping, iBC, BC)
            call BCint(lstep*Delt(1),shp,shgl,shpb,shglb,x, BC, iBC)
         endif
-        if (impfile .gt. 0 ) then !for impedance BC
-           do irank=1, numpe
-              call MPI_BARRIER (MPI_COMM_WORLD,ierr)
-              if((irank-1).eq.myrank) then 
-                 write(*,*) 'reading Qhistor.dat'
-                 open(unit=816, file='Qhistor.dat',status='old')
-                 read (816,*) ntimeptpT
-                 allocate (QHistImp(ntimeptpT+1,numImpSrfs)) 
-                 allocate (QHistTry(ntimeptpT,numImpSrfs)) 
-                 allocate (QHistTryF(ntimeptpT,numImpSrfs)) 
-                 do j=1,ntimeptpT+1
-                    read(816,*) (QHistImp(j,n),n=1,numImpSrfs) !read flow history
-                 enddo
-                 close(816)              
-                 call initImpt() !read impedance data and initialize begin/end values
-                 do i=2,ntimeptpT
-                    call Impint((ntimeptpT-i+1)*Delt(1),i) !return Imp values in reverse order ZN->Z0
-                 enddo
 
-                 allocate (poldImp(0:MAXSURF)) !for pressure part that depends on the history only
-              else 
-                 continue
-              endif
-           enddo
+c....========================== ISL April 2020 =========================
+        if (impfile .gt. 0 ) then !for impedance BC
+          allocate (poldImp(0:MAXSURF)) !for pressure part that depends on the history only
+          call initImpt() !read impedance data and initialize begin/end values  
+
+          do i=2,ntimeptpT
+            call Impint((ntimeptpT-i+1)*Delt(1),i) !return Imp values in reverse order ZN->Z0
+          enddo
+
+C           do irank=1, numpe
+C                 call MPI_BARRIER (MPI_COMM_WORLD,ierr)
+
+C                 if ((irank-1).eq.myrank) then
+C                    call initImpt() !read impedance data and initialize begin/end values  
+
+C                   do i=2,ntimeptpT
+C                     call Impint((ntimeptpT-i+1)*Delt(1),i) !return Imp values in reverse order ZN->Z0
+C                   enddo
+
+C                    allocate (poldImp(0:MAXSURF)) !for pressure part that depends on the history only
+C                 else 
+C                    continue
+C                 endif
+C              enddo
+
+C           print *, '************* initializing imp BC **************'
+C           allocate (poldImp(0:MAXSURF))   ! for pressure part that depends on the history only
+C           call initImpt() ! read impedance data and initialize begin/end values
+C           do i = 2, ntimeptpT
+C             call Impint((ntimeptpT-i+1)*Delt(1),i) !return Imp values in reverse order ZN->Z0
+C           enddo
         endif
+
         if (ircrfile .gt. 0 ) then !for RCR BC
            call initRCRt()      !read RCR data
            dtRCR(:) = Delt(1)/(ValueListRCR(2,:)*ValueListRCR(3,:))
@@ -237,6 +246,7 @@ c           enddo
 c
 c
 c.... satisfy the boundary conditions
+
 c
 
 c        call itrBC (y, ac,  iBC, BC, iper, ilwork)
