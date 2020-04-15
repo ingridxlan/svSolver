@@ -15871,9 +15871,9 @@ C
       close(817)
       
       ntimeptpT = nptsImpmax - 1      ! num time steps per cardiac cycle
-      allocate (ValueListImp(ntimeptpT+1,numImpSrfs))
-      ValueListImp(ntimeptpT+1,:) = ValueImpt(1,2,:) !Z(time=0), last entry
-      ValueListImp(1,:) = ValueImpt(1,2,:) !Z(time=0)=Z(time=T)
+      allocate (ReverseImp(ntimeptpT+1,numImpSrfs))
+      ReverseImp(ntimeptpT+1,:) = ValueImpt(1,2,:) !Z(time=0), last entry
+      ReverseImp(1,:) = ValueImpt(1,2,:) !Z(time=0)=Z(time=T)
 
 c....=========================== ISL April 2020 ========================
 C       ntimeptpT = nptsImpmax - 1      ! num time steps per cardiac cycle
@@ -15917,7 +15917,7 @@ C
             if(ValueImpt(j,1,k).gt.ptime) then  ! this is upper bound, j-1 is lower
                wr=(ptime-ValueImpt(j-1,1,k))
      &             / ( ValueImpt(j,1,k)-ValueImpt(j-1,1,k) )
-               ValueListImp(jstep,k)= ValueImpt(j-1,2,k)*(one-wr) 
+               ReverseImp(jstep,k)= ValueImpt(j-1,2,k)*(one-wr) 
      &                        + ValueImpt(j,2,k)*wr
                exit
             endif
@@ -16824,19 +16824,19 @@ C
 C      
       integer numISrfs, numTpoints      
 
-      allocate (ConvCoef(numTpoints+2,3)) !same time discret. for all imp. BC
-      do j=1,numTpoints+2
-         ConvCoef(j,:)=0.5/numTpoints !dt/2 divided by period T=N*dt
-         ConvCoef(j,1)=ConvCoef(j,1)*(1.0-alfi)*(1.0-alfi)
-         ConvCoef(j,2)=ConvCoef(j,2)*(1.0+2*alfi*(1.0-alfi))
-         ConvCoef(j,3)=ConvCoef(j,3)*alfi*alfi
-      enddo
-      ConvCoef(1,2)=zero
-      ConvCoef(1,3)=zero
-      ConvCoef(2,3)=zero
-      ConvCoef(numTpoints+1,1)=zero
-      ConvCoef(numTpoints+2,2)=zero
-      ConvCoef(numTpoints+2,1)=zero
+C       allocate (ConvCoef(numTpoints+2,3)) !same time discret. for all imp. BC
+C       do j=1,numTpoints+2
+C          ConvCoef(j,:)=0.5/numTpoints !dt/2 divided by period T=N*dt
+C          ConvCoef(j,1)=ConvCoef(j,1)*(1.0-alfi)*(1.0-alfi)
+C          ConvCoef(j,2)=ConvCoef(j,2)*(1.0+2*alfi*(1.0-alfi))
+C          ConvCoef(j,3)=ConvCoef(j,3)*alfi*alfi
+C       enddo
+C       ConvCoef(1,2)=zero
+C       ConvCoef(1,3)=zero
+C       ConvCoef(2,3)=zero
+C       ConvCoef(numTpoints+1,1)=zero
+C       ConvCoef(numTpoints+2,2)=zero
+C       ConvCoef(numTpoints+2,1)=zero
 
 c
 c...calculate the coefficients for the impedance convolution
@@ -16845,12 +16845,12 @@ C       allocate (ImpConvCoef(numTpoints+2,numISrfs))
 
 c..try easiest convolution Q and Z constant per time step
 C       do j=3,numTpoints+1
-C          ImpConvCoef(j,:) = ValueListImp(j-1,:)/numTpoints
+C          ImpConvCoef(j,:) = ReverseImp(j-1,:)/numTpoints
 C       enddo
 C       ImpConvCoef(1,:) =zero
 C       ImpConvCoef(2,:) =zero
 C       ImpConvCoef(numTpoints+2,:) = 
-C      &           ValueListImp(numTpoints+1,:)/numTpoints
+C      &           ReverseImp(numTpoints+1,:)/numTpoints
 C c compensate for yalpha passed not y in Elmgmr()
 C       ImpConvCoef(numTpoints+1,:)= ImpConvCoef(numTpoints+1,:)
 C      &                  - ImpConvCoef(numTpoints+2,:)*(1.0-alfi)/alfi 
@@ -16863,7 +16863,7 @@ c....each time step and assuming constant impedance within each time step.
 c....This is implementation (a) in Irene's thesis pg. 157, but my own
 c....calculations yielded different beta coefficients.
 
-c....Note ValueListImp: Z(N), Z(N-1), Z(N-2), ..., Z(1), Z(0) 
+c....Note ReverseImpAlpha: Z(N + alfi), Z(N - 1 + alfi), ..., Z(alfi) 
 c....and is (numTpoints + 1) long
 
 c.....Split up the integrals to the left & right of each time step
@@ -16871,32 +16871,87 @@ c.....Split up the integrals to the left & right of each time step
 
       ImpConvCoef = zero
 
-      ImpConvCoef(1, 2, :) = 0.5 / numTpoints * (1.0 - alfi) * 
-     &                       (1.0 - alfi) * ValueListImp(2, :)
-      
-      ImpConvCoef(2, 1, :) = 0.5 / numTpoints * (1.0 - alfi * alfi) *
-     &                       ValueListImp(2, :)
-      ImpConvCoef(2, 2, :) = 0.5 / numTpoints * ValueListImp(3, :)
+      ImpConvCoef(1, 2, :) = 1.0 / (3.0 * numTpoints) * 
+     &                     ReverseImpAlpha(1, :) * (1.0 - alfi) ** 3.0 +
+     &                     1.0 / (6.0 * numTpoints) *
+     &                     ReverseImpAlpha(2, :) * (1.0 - alfi) ** 2.0 *
+     &                     (1.0 + 2.0 * alfi)
+
+      ImpConvCoef(2, 1, :) = 1.0 / (6.0 * numTpoints) * 
+     &                     ReverseImpAlpha(1, :) * (1.0 - alfi) ** 2.0 *
+     &                     (1.0 + 2.0 * alfi) + 
+     &                     1.0 / (3.0 * numTpoints) *
+     &                     ReverseImpAlpha(2, :) * (1.0 - alfi ** 3.0)
+
+      ImpConvCoef(2, 2, :) = 1.0 / (3.0 * numTpoints) *
+     &                     ReverseImpAlpha(2, :) +
+     &                     1.0 / (6.0 * numTpoints) * 
+     &                     ReverseImpAlpha(3, :)
 
       do j = 3, numTpoints
-        ImpConvCoef(j, 1, :) = 0.5 / numTpoints * ValueListImp(j, :)
-        ImpConvCoef(j, 2, :) = 0.5 / numTpoints * ValueListImp(j + 1, :)
+
+        ImpConvCoef(j, 1, :) = 1.0 / (6.0 * numTpoints) *
+     &                         ReverseImpAlpha(j - 1, :) + 
+     &                         1.0 / (3.0 * numTpoints) *
+     &                         ReverseImpAlpha(j, :)
+
+        ImpConvCoef(j, 2, :) = 1.0 / (3.0 * numTpoints) *
+     &                         ReverseImpAlpha(j, :) + 
+     &                         1.0 / (6.0 * numTpoints) *
+     &                         ReverseImpAlpha(j + 1, :)
+
       enddo
 
-      ImpConvCoef(numTpoints+1, 1, :) = 0.5 / numTpoints * 
-     &                                  ValueListImp(numTpoints + 1, :)
+      ImpConvCoef(numTpoints + 1, 1, :) = 1.0 / (6.0 * numTpoints) *
+     &                         ReverseImpAlpha(numTpoints, :) +
+     &                         1.0 / (3.0 * numTpoints) *
+     &                         ReverseImpAlpha(numTpoints + 1, :)
 
-      ImpConvCoef(numTpoints+1, 2, :) = 0.5 / numTpoints *
-     &                                  (2.0 * alfi - alfi * alfi) * 
-     &                                  ValueListImp(numTpoints + 1, :)
+c.....Z(-1 + alfi) = Z(N - 1 + alfi)
+      ImpConvCoef(numTpoints + 1, 2, :) = 1.0 / (3.0 * numTpoints) *
+     &                         ReverseImpAlpha(numTpoints + 1, :) *
+     &                         alfi * (alfi ** 2.0 - 3.0 * alfi + 3.0) +
+     &                         1.0 / (6.0 * numTpoints) *
+     &                         ReverseImpAlpha(2, :) * 
+     &                         alfi ** 2.0 * (3.0 - 2.0 * alfi)
 
-      ImpConvCoef(numTpoints+2, 1, :) = 0.5 / numTpoints * alfi * alfi *
-     &                                  ValueListImp(numTpoints + 1, :)
+      ImpConvCoef(numTpoints + 2, 1, :) = 1.0 / (6.0 * numTpoints) *
+     &                         ReverseImpAlpha(numTpoints + 1, :) *
+     &                         alfi ** 2.0 * (3.0 - 2.0 * alfi) + 
+     &                         1.0 / (3.0 * numTpoints) *
+     &                         ReverseImpAlpha(2, :) * alfi ** 3.0
 
-c compensate for yalpha passed not y in Elmgmr()
-      ImpConvCoef(numTpoints+1,2,:) = ImpConvCoef(numTpoints+1,2,:)
-     &                   - ImpConvCoef(numTpoints+2,1,:)*(1.0-alfi)/alfi 
-      ImpConvCoef(numTpoints+2,1,:) = ImpConvCoef(numTpoints+2,1,:)/alfi 
+
+c....===================== Constant Z per time step ====================
+c....Note ReverseImp: Z(N), Z(N-1), Z(N-2), ..., Z(1), Z(0) 
+c....and is (numTpoints + 1) long
+
+C       ImpConvCoef(1, 2, :) = 0.5 / numTpoints * (1.0 - alfi) * 
+C      &                       (1.0 - alfi) * ReverseImp(2, :)
+      
+C       ImpConvCoef(2, 1, :) = 0.5 / numTpoints * (1.0 - alfi * alfi) *
+C      &                       ReverseImp(2, :)
+C       ImpConvCoef(2, 2, :) = 0.5 / numTpoints * ReverseImp(3, :)
+
+C       do j = 3, numTpoints
+C         ImpConvCoef(j, 1, :) = 0.5 / numTpoints * ReverseImp(j, :)
+C         ImpConvCoef(j, 2, :) = 0.5 / numTpoints * ReverseImp(j + 1, :)
+C       enddo
+
+C       ImpConvCoef(numTpoints+1, 1, :) = 0.5 / numTpoints * 
+C      &                                  ReverseImp(numTpoints + 1, :)
+
+C       ImpConvCoef(numTpoints+1, 2, :) = 0.5 / numTpoints *
+C      &                                  (2.0 * alfi - alfi * alfi) * 
+C      &                                  ReverseImp(numTpoints + 1, :)
+
+C       ImpConvCoef(numTpoints+2, 1, :) = 0.5 / numTpoints * alfi * alfi *
+C      &                                  ReverseImp(numTpoints + 1, :)
+
+C c compensate for yalpha passed not y in Elmgmr()
+C       ImpConvCoef(numTpoints+1,2,:) = ImpConvCoef(numTpoints+1,2,:)
+C      &                   - ImpConvCoef(numTpoints+2,1,:)*(1.0-alfi)/alfi 
+C       ImpConvCoef(numTpoints+2,1,:) = ImpConvCoef(numTpoints+2,1,:)/alfi 
 
 C       print *, '************* ImpConvCoef Srf 1 Col 1 ***********'
 C       print *, ImpConvCoef(:, 1, 1)

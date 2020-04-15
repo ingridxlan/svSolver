@@ -226,10 +226,10 @@ c
       module convolImpFlow
       real*8, allocatable ::  QHistImp(:,:) ! Q over most recent cycle
       real*8, allocatable ::  ValueImpt(:,:,:)
-      real*8, allocatable ::  ValueListImp(:,:)
+      real*8, allocatable ::  ReverseImp(:,:)        ! ISL April 2020
+      real*8, allocatable ::  ReverseImpAlpha(:,:)   ! ISL April 2020
       real*8, allocatable ::  ConvCoef(:,:)
-C       real*8, allocatable ::  ImpConvCoef(:,:)
-      real*8, allocatable ::  ImpConvCoef(:, :, :)     ! ISL April 2020
+      real*8, allocatable ::  ImpConvCoef(:, :, :)   ! ISL April 2020
       real*8, allocatable ::  poldImp(:)
       integer ntimeptpT
       integer numDataImp

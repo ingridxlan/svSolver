@@ -167,33 +167,20 @@ c....========================== ISL April 2020 =========================
           allocate (poldImp(0:MAXSURF)) !for pressure part that depends on the history only
           call initImpt() !read impedance data and initialize begin/end values  
 
+c.....Generate ReverseImp: Z(N), Z(N-1), ..., Z(0), where Z(N) = Z(0)         
           do i=2,ntimeptpT
-            call Impint((ntimeptpT-i+1)*Delt(1),i) !return Imp values in reverse order ZN->Z0
+            call Impint((ntimeptpT-i+1)*Delt(1),i) 
           enddo
 
-C           do irank=1, numpe
-C                 call MPI_BARRIER (MPI_COMM_WORLD,ierr)
-
-C                 if ((irank-1).eq.myrank) then
-C                    call initImpt() !read impedance data and initialize begin/end values  
-
-C                   do i=2,ntimeptpT
-C                     call Impint((ntimeptpT-i+1)*Delt(1),i) !return Imp values in reverse order ZN->Z0
-C                   enddo
-
-C                    allocate (poldImp(0:MAXSURF)) !for pressure part that depends on the history only
-C                 else 
-C                    continue
-C                 endif
-C              enddo
-
-C           print *, '************* initializing imp BC **************'
-C           allocate (poldImp(0:MAXSURF))   ! for pressure part that depends on the history only
-C           call initImpt() ! read impedance data and initialize begin/end values
-C           do i = 2, ntimeptpT
-C             call Impint((ntimeptpT-i+1)*Delt(1),i) !return Imp values in reverse order ZN->Z0
-C           enddo
+c.....Compute Imp values at alpha time steps in reverse order
+c.....Z(N + alfi), Z(N - 1 + alfi), ..., Z(alfi), where Z(N + alfi) = Z(alfi)
+          do i=2, (ntimeptpT + 1)
+            ReverseImpAlpha(i, :) = alfi * ReverseImp(i - 1, :) +
+     &                              (1 - alfi) * ReverseImp(i, :)
+          enddo
+          ReverseImpAlpha(1, :) = ReverseImpAlpha(ntimeptpT + 1, :)
         endif
+c....===================================================================
 
         if (ircrfile .gt. 0 ) then !for RCR BC
            call initRCRt()      !read RCR data
