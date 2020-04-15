@@ -174,6 +174,7 @@ c.....Generate ReverseImp: Z(N), Z(N-1), ..., Z(0), where Z(N) = Z(0)
 
 c.....Compute Imp values at alpha time steps in reverse order
 c.....Z(N + alfi), Z(N - 1 + alfi), ..., Z(alfi), where Z(N + alfi) = Z(alfi)
+          allocate (ReverseImpAlpha(ntimeptpT+1,numImpSrfs))
           do i=2, (ntimeptpT + 1)
             ReverseImpAlpha(i, :) = alfi * ReverseImp(i - 1, :) +
      &                              (1 - alfi) * ReverseImp(i, :)
